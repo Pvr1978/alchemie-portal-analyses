@@ -1,24 +1,25 @@
 {
   "name": "alchemie-portal-scripts",
-  "version": "1.0.1",  // Bump naar .1 omdat we nu cheerio + start script toevoegen
-  "description": "Live crypto market data scripts for Alchemie Portal – orderbook snapshots (OKX/Bitvavo) + BTC/ETH/SOL ETF flows scraping",
+  "version": "1.0.1",
+  "description": "Live crypto market data scripts for Alchemie Portal – orderbook snapshots (OKX/Bitvavo) + BTC/ETH/SOL ETF flows scraping from Farside",
   "main": "fetch-orderbook.js",
   "scripts": {
     "orderbook": "node fetch-orderbook.js",
     "etf": "node fetch-etf-flows.js",
-    "start": "npm run etf && npm run orderbook",  // Handig voor alles in één keer runnen
-    "test": "echo \"Error: no test specified\" && exit 1"  // Standaard placeholder, kun je later uitbreiden
+    "start": "npm run etf && npm run orderbook",
+    "prestart": "npm install --legacy-peer-deps || true",  // Zorgt dat deps altijd up-to-date zijn bij run
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "axios": "^1.7.2",          // Update naar recente stabiele versie (was ^1.6.0)
-    "cheerio": "^1.0.0-rc.12"   // Voor HTML parsing van Farside
+    "axios": "^1.7.2",
+    "cheerio": "^1.0.0-rc.12"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"         // Optioneel: auto-reload bij dev (npm install --save-dev nodemon)
+    "nodemon": "^3.1.0"
   },
   "author": "Alchemie Portal",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"          // Zorgt dat het op recente Node draait (GitHub Actions etc.)
+    "node": ">=20.0.0"  // GitHub Actions gebruikt nu 24, dit voorkomt oude versies
   }
 }
