@@ -1,13 +1,12 @@
 {
   "name": "alchemie-portal-scripts",
   "version": "1.0.1",
-  "description": "Live crypto market data scripts for Alchemie Portal – orderbook snapshots (OKX/Bitvavo) + BTC/ETH/SOL ETF flows scraping from Farside",
+  "description": "Live crypto market data scripts for Alchemie Portal – orderbook snapshots (OKX/Bitvavo) + BTC/ETH/SOL ETF flows scraping",
   "main": "fetch-orderbook.js",
   "scripts": {
     "orderbook": "node fetch-orderbook.js",
     "etf": "node fetch-etf-flows.js",
     "start": "npm run etf && npm run orderbook",
-    "prestart": "npm install --legacy-peer-deps || true",  // Zorgt dat deps altijd up-to-date zijn bij run
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -20,6 +19,6 @@
   "author": "Alchemie Portal",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0"  // GitHub Actions gebruikt nu 24, dit voorkomt oude versies
+    "node": ">=20.0.0"
   }
 }
