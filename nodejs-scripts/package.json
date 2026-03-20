@@ -1,17 +1,17 @@
-```json
 {
   "name": "alchemie-portal-scripts",
   "version": "1.0.0",
-  "description": "Live crypto market data scripts for Alchemie Portal",
+  "description": "Live crypto market data scripts for Alchemie Portal (orderbooks + ETF flows)",
   "main": "fetch-orderbook.js",
   "scripts": {
     "orderbook": "node fetch-orderbook.js",
-    "etf": "node fetch-etf-flows.js"
+    "etf": "node fetch-etf-flows.js",
+    "start": "npm run etf && npm run orderbook"
   },
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
   },
   "author": "Alchemie Portal",
   "license": "MIT"
 }
-```
