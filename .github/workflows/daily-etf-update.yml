@@ -2,8 +2,8 @@ name: Daily ETF Flows Auto-Update
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # Elke dag 10:00 UTC (~11:00 NL) – pas aan als je wilt (bijv. '0 8 * * *' voor 08:00 UTC)
-  workflow_dispatch:  # Handmatig starten via Actions tab
+    - cron: '0 10 * * *'
+  workflow_dispatch:
 
 jobs:
   update-etf-flows:
@@ -20,18 +20,25 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd nodejs-scripts
-          npm ci  # Of npm install als je geen lockfile hebt
+          if [ -d "nodejs-scripts" ]; then
+            cd nodejs-scripts
+            npm install || echo "npm install failed, trying npm ci"
+            npm ci || npm install --force
+          else
+            echo "nodejs-scripts map niet gevonden!"
+            exit 1
+          fi
 
       - name: Run ETF flows script
         run: |
-          cd nodejs-scripts
-          node fetch-etf-flows.js >> ../etf_flows/bitcoin_etf_flows_latest.md  # Append naar deze file (maak hem aan als hij niet bestaat)
+          cd nodejs-scripts || exit 1
+          node fetch-etf-flows.js > ../etf_flows/etf_update_$(date +'%Y-%m-%d').md  # Maak nieuwe file per dag voor debug
+          cat ../etf_flows/etf_update_$(date +'%Y-%m-%d').md  # Toon output in log
 
-      - name: Commit updated flows
+      - name: Commit changes
         run: |
-          git config user.name "Alchemie Portal Bot"
-          git config user.email "actions@github.com"
+          git config --global user.name "Alchemie Portal Bot"
+          git config --global user.email "actions@github.com"
           git add etf_flows/
-          git commit -m "Auto: Bitcoin ETF flows update $(date +'%Y-%m-%d')" || echo "Geen nieuwe data"
-          git push
+          git commit -m "Auto-update ETF flows $(date +'%Y-%m-%d')" || echo "No changes - pending data"
+          git push || echo "Push skipped - no changes"
