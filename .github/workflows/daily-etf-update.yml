@@ -8,45 +8,40 @@ on:
 jobs:
   update-flows:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Force Node 24 om deprecation te omzeilen
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js 24 (force to avoid deprecation)
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: nodejs-scripts/package-lock.json  # Als je lockfile hebt, anders verwijder
+          node-version: '24'  # Gebruik Node 24 direct
 
-      - name: Debug paths
+      - name: Debug directory & files
         run: |
           ls -la
-          ls -la nodejs-scripts || echo "No nodejs-scripts map!"
-          ls -la etf_flows || echo "No etf_flows map!"
+          ls -la nodejs-scripts || echo "nodejs-scripts map ontbreekt!"
+          ls -la etf_flows || echo "etf_flows map ontbreekt!"
+          ls -la nodejs-scripts/package.json || echo "package.json niet gevonden!"
 
       - name: Install dependencies
         run: |
-          cd nodejs-scripts || exit 1
-          npm install --legacy-peer-deps --force  # Fallback voor deprecated issues
-          npm list axios cheerio || echo "Dependencies not installed?"
+          cd nodejs-scripts || { echo "Fout: cd nodejs-scripts mislukt"; exit 1; }
+          npm install axios cheerio --save --legacy-peer-deps --force || npm install --force
+          npm list || echo "npm list faalt"
 
       - name: Run ETF script
         run: |
           cd nodejs-scripts
-          node fetch-etf-flows.js > ../etf_flows/etf_update_$(date +%Y-%m-%d).md 2>&1 || echo "Script crashed - check above"
-          cat ../etf_flows/etf_update_$(date +%Y-%m-%d).md  # Toon output in log
+          node fetch-etf-flows.js > ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md 2>&1
+          cat ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md
 
-      - name: Commit if changes
+      - name: Commit changes
         run: |
           git config user.name "Alchemie Bot"
           git config user.email "bot@github.com"
           git add etf_flows/
-          git commit -m "Auto: ETF flows $(date +'%Y-%m-%d')" || echo "No changes - data pending"
-          git push || echo "Push skipped"
-      - name: Commit changes
-        run: |
-          git config --global user.name "Alchemie Portal Bot"
-          git config --global user.email "actions@github.com"
-          git add etf_flows/
-          git commit -m "Auto-update ETF flows $(date +'%Y-%m-%d')" || echo "No changes - pending data"
-          git push || echo "Push skipped - no changes"
+          git commit -m "Auto: ETF flows debug update $(date +'%Y-%m-%d')" || echo "Geen changes"
+          git push || echo "Geen push nodig"
