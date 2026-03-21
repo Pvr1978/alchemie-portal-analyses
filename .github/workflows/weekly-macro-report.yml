@@ -1,12 +1,10 @@
 name: Weekly Macro Report
 
 on:
-  schedule:
-    - cron: '0 9 * * 1'
   workflow_dispatch:
 
 jobs:
-  macro-report:
+  macro:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
