@@ -1,0 +1,27 @@
+```yaml
+name: Daily AI Analyst
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - run: |
+          mkdir -p src/utils
+          mkdir -p src/ai_analyst
+      - run: python src/ai_analyst/report.py
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-report
+          path: daily_report.txt
+```
