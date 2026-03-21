@@ -1,0 +1,44 @@
+```python
+import time
+import functools
+import requests
+
+def retry(max_attempts=3, delay=2, backoff=2):
+    """Decorator voor automatische retry bij fouten"""
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            attempts = 0
+            current_delay = delay
+            while attempts < max_attempts:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    attempts += 1
+                    print(f"[ERROR] {func.__name__} failed: {e}")
+                    if attempts == max_attempts:
+                        print(f"[FATAL] {func.__name__} failed after {max_attempts} attempts")
+                        return None
+                    print(f"[RETRY] Attempt {attempts + 1}/{max_attempts} in {current_delay}s")
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+            return None
+        return wrapper
+    return decorator
+
+def safe_request(url, params=None, timeout=10):
+    """Veilige API request met timeout en error handling"""
+    try:
+        response = requests.get(url, params=params, timeout=timeout)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.Timeout:
+        print(f"[ERROR] Timeout: {url}")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"[ERROR] Request failed: {e}")
+        return None
+    except Exception as e:
+        print(f"[ERROR] Unexpected: {e}")
+        return None
+```
