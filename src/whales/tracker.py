@@ -1,5 +1,4 @@
 import requests
-import time
 from datetime import datetime
 
 # CoinGecko gratis API (geen key nodig)
@@ -17,7 +16,7 @@ def get_btc_price():
         return None
 
 def get_top_gainers():
-    """Haal top 5 gainers van vandaag op (trending coins)"""
+    """Haal top 5 trending coins van vandaag op"""
     try:
         url = f"{COINGECKO_URL}/search/trending"
         response = requests.get(url)
@@ -34,38 +33,23 @@ def get_top_gainers():
         print(f"❌ Fout bij ophalen gainers: {e}")
         return []
 
-def check_btc_movement(previous_price, current_price, threshold_pct=2):
-    """Check of BTC meer dan X% is bewogen"""
-    if previous_price and current_price:
-        change_pct = abs((current_price - previous_price) / previous_price * 100)
-        if change_pct > threshold_pct:
-            direction = "🔺 up" if current_price > previous_price else "🔻 down"
-            return {
-                "alert": True,
-                "message": f"🐋 BTC {direction} {change_pct:.1f}% in 2 hours\nPrice: ${current_price:,.0f}\nTime: {datetime.now().strftime('%H:%M UTC')}"
-            }
-    return {"alert": False}
-
-def format_alert(alert):
-    return alert["message"]
-
 if __name__ == "__main__":
     print(f"🔍 Whale Tracker gestart om {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # Stap 1: BTC prijs check
+    # BTC prijs ophalen
     current_price = get_btc_price()
     if current_price:
         print(f"💰 Huidige BTC prijs: ${current_price:,.0f}")
+    else:
+        print("💰 BTC prijs: niet beschikbaar")
     
-    # Stap 2: Top gainers van vandaag
+    # Top gainers ophalen
     gainers = get_top_gainers()
     if gainers:
         print("\n📈 Trending coins vandaag:")
         for g in gainers:
             print(f"  {g['symbol']}: {g['price_change_24h']:.1f}%")
-    
-    # Stap 3: Alert bij extreme beweging
-    # (Voor nu: altijd false, want we slaan geen historische prijs op)
-    # later kun je een bestandje bijhouden met vorige prijs
+    else:
+        print("\n📈 Geen trending data beschikbaar")
     
     print("\n✅ Whale tracker draait. Geen extreme bewegingen gedetecteerd.")
