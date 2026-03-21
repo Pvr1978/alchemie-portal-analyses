@@ -1,53 +1,50 @@
-import requests
+```python
+import sys
+import os
 from datetime import datetime
 
-# CoinGecko gratis API (geen key nodig)
+# Voeg utils toe aan path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.error_handler import retry, safe_request
+from utils.fallback_data import get_fallback_btc_price
+
 COINGECKO_URL = "https://api.coingecko.com/api/v3"
 
+@retry(max_attempts=3, delay=2, backoff=2)
 def get_btc_price():
-    """Haal huidige BTC prijs op via CoinGecko (gratis)"""
-    try:
-        url = f"{COINGECKO_URL}/simple/price?ids=bitcoin&vs_currencies=usd"
-        response = requests.get(url)
-        data = response.json()
+    url = f"{COINGECKO_URL}/simple/price?ids=bitcoin&vs_currencies=usd"
+    data = safe_request(url)
+    if data and "bitcoin" in data and "usd" in data["bitcoin"]:
         return data["bitcoin"]["usd"]
-    except Exception as e:
-        print(f"Fout bij ophalen BTC prijs: {e}")
-        return None
+    return get_fallback_btc_price()
 
+@retry(max_attempts=2, delay=2, backoff=2)
 def get_top_gainers():
-    """Haal top 5 trending coins van vandaag op"""
-    try:
-        url = f"{COINGECKO_URL}/search/trending"
-        response = requests.get(url)
-        data = response.json()
-        gainers = []
-        for item in data.get("coins", [])[:5]:
-            gainers.append({
-                "name": item["item"]["name"],
-                "symbol": item["item"]["symbol"].upper(),
-                "price_change_24h": item["item"]["data"].get("price_change_percentage_24h", {}).get("usd", 0)
-            })
-        return gainers
-    except Exception as e:
-        print(f"Fout bij ophalen gainers: {e}")
-        return []
+    url = f"{COINGECKO_URL}/search/trending"
+    data = safe_request(url)
+    gainers = []
+    if data and "coins" in data:
+        for item in data["coins"][:5]:
+            try:
+                gainers.append({
+                    "symbol": item["item"]["symbol"].upper(),
+                    "change": item["item"]["data"].get("price_change_percentage_24h", {}).get("usd", 0)
+                })
+            except:
+                continue
+    return gainers
 
 if __name__ == "__main__":
-    print(f"Whale Tracker gestart om {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Whale Tracker | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-    current_price = get_btc_price()
-    if current_price:
-        print(f"BTC prijs: ${current_price:,.0f}")
-    else:
-        print("BTC prijs: niet beschikbaar")
+    price = get_btc_price()
+    if price:
+        print(f"BTC: ${price:,.0f}")
     
     gainers = get_top_gainers()
     if gainers:
-        print("\nTrending coins vandaag:")
+        print("\nTrending coins:")
         for g in gainers:
-            print(f"  {g['symbol']}: {g['price_change_24h']:.1f}%")
-    else:
-        print("\nGeen trending data beschikbaar")
-    
-    print("\nWhale tracker draait.")
+            print(f"  {g['symbol']}: {g['change']:.1f}%")
+```
