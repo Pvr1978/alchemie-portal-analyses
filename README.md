@@ -1,36 +1,23 @@
-# Alchemie Portal Analyses
+#Alchemie Portal Analyses
 
-Data-gedreven crypto-analyses: whale tracking, ETF flows, orderbook liquidity, on-chain metrics & macro correlaties.
+Data-gedreven crypto-analyses (whale tracking, ETF flows, orderbooks, on-chain, macro) — gebouwd met **gratis APIs** waar mogelijk.
 
-**Geen hype. Alleen data.**
+## Gratis / free-tier data bronnen die gebruikt worden
+- ETF flows & liquidations → CoinGlass public endpoints
+- Whale transacties → Whale Alert public API
+- Orderbooks & spreads → CCXT (public data van Binance, Bybit, OKX, etc.)
+- On-chain basis metrics → Glassnode free tier of Messari/Santiment free
+- Macro (olie, rente) → FRED API of Alpha Vantage free
 
-## Wat deze repo doet
-
-- **ETF Flows** — dagelijkse Bitcoin & Ethereum instroom/uitstroom  
-- **Whale Tracking** — detectie grote transacties (>$50M)  
-- **On-Chain Metrics** — exchange flows, supply distributie, NUPL (Glassnode)  
-- **Orderbook Liquidity** — bid/ask spreads & diepte (CoinGlass / exchanges)  
-- **Macro Data** — olieprijzen, rentes, Fed verwachtingen
-
-## Automatische Workflows
-
-| Workflow                  | Frequentie          | Wat het doet                              |
-|---------------------------|---------------------|-------------------------------------------|
-| daily-etf-update.yml      | Dagelijks 08:00 UTC | ETF flow data ophalen                     |
-| hourly-whale-tracker.yml  | Elke 2 uur          | Grote transacties detecteren              |
-| daily-onchain-metrics.yml | Dagelijks 08:00 UTC | Glassnode metrics verzamelen              |
-| weekly-macro-report.yml   | Wekelijks maandag   | Macro analyse (olie, rente, geopolitiek)  |
-
-## Installatie & gebruik
+## Installatie (lokaal)
 
 ```bash
-# 1. Clone
 git clone https://github.com/Pvr1978/alchemie-portal-analyses.git
 cd alchemie-portal-analyses
 
-# 2. Python dependencies (meeste scripts zijn Python)
+python -m venv venv
+source venv/bin/activate    # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. Optioneel: Node.js scripts (als je die gebruikt)
-# cd nodejs-scripts
-# npm install
+# Optioneel: maak .env aan (meeste calls werken zonder keys)
+cp .env.example .env
