@@ -1,3 +1,7 @@
-```
 requests
-```
+pandas
+numpy
+python-dotenv
+ccxt>=4.3.0
+schedule
+pytz
