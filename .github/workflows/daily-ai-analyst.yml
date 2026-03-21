@@ -2,11 +2,9 @@ name: Daily AI Analyst
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 7 * * *'
 
 jobs:
-  generate-report:
+  analyst:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,8 +13,7 @@ jobs:
           python-version: '3.11'
       - run: pip install requests
       - run: python src/ai_analyst/report.py
-      - name: Upload report
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: daily-report
           path: daily_report.txt
