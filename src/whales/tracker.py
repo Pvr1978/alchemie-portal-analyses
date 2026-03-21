@@ -12,7 +12,7 @@ def get_btc_price():
         data = response.json()
         return data["bitcoin"]["usd"]
     except Exception as e:
-        print(f"❌ Fout bij ophalen BTC prijs: {e}")
+        print(f"Fout bij ophalen BTC prijs: {e}")
         return None
 
 def get_top_gainers():
@@ -30,26 +30,24 @@ def get_top_gainers():
             })
         return gainers
     except Exception as e:
-        print(f"❌ Fout bij ophalen gainers: {e}")
+        print(f"Fout bij ophalen gainers: {e}")
         return []
 
 if __name__ == "__main__":
-    print(f"🔍 Whale Tracker gestart om {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"Whale Tracker gestart om {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # BTC prijs ophalen
     current_price = get_btc_price()
     if current_price:
-        print(f"💰 Huidige BTC prijs: ${current_price:,.0f}")
+        print(f"BTC prijs: ${current_price:,.0f}")
     else:
-        print("💰 BTC prijs: niet beschikbaar")
+        print("BTC prijs: niet beschikbaar")
     
-    # Top gainers ophalen
     gainers = get_top_gainers()
     if gainers:
-        print("\n📈 Trending coins vandaag:")
+        print("\nTrending coins vandaag:")
         for g in gainers:
             print(f"  {g['symbol']}: {g['price_change_24h']:.1f}%")
     else:
-        print("\n📈 Geen trending data beschikbaar")
+        print("\nGeen trending data beschikbaar")
     
-    print("\n✅ Whale tracker draait. Geen extreme bewegingen gedetecteerd.")
+    print("\nWhale tracker draait.")
