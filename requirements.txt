@@ -1,7 +1,7 @@
 requests
 pandas
 numpy
-python-dotenv
-ccxt>=4.3.0
-schedule
-pytz
+python-dotenv           # voor .env beheren, ook als je later keys toevoegt
+ccxt>=4.3.0             # superhandig voor alle public exchange data
+schedule                # voor lokale scheduling als je test
+pytz                    # tijdzones
