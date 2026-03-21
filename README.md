@@ -1,28 +1,27 @@
-# 🏛️ Alchemie Portal | Crypto Data Analyses
+# Alchemie Portal Analyses
 
-Data-driven crypto analyses by **The Crypto Architect**.
+Crypto data-analyse met on-chain metrics, whale tracking, ETF flows en macro-economische correlaties.
 
-## 📊 Wat je hier vindt
+## Wat deze repo doet
 
-- **Whale tracking** – on-chain bewegingen van grote wallets
-- **ETF flows** – institutionele instroom/uitstroom
-- **Orderbook data** – OKX, Bitvavo diepte en spreads
-- **Liquidatie data** – longs/shorts, shakeout analyse
-- **On-chain metrics** – NUPL, MVRV, supply in profit
+- **ETF Flows:** Dagelijkse instroom/uitstroom van Bitcoin en Ethereum ETF's
+- **Whale Tracking:** Detectie van grote transacties (>$50M) op blockchain
+- **On-Chain Metrics:** Exchange flows, supply distributie, NUPL (via Glassnode)
+- **Orderbook Liquidity:** Bid/ask spreads en diepte (via CoinGlass)
+- **Macro Data:** Olieprijzen, rentes, Fed verwachtingen
 
-## 🔗 Waar je me vindt
+## Automatische Workflows
 
-- **Telegram:** t.me/AlchemiePortal
-- **X:** x.com/AlchemiePortal
+| Workflow | Frequentie | Wat |
+|----------|------------|-----|
+| `daily-etf-update.yml` | Dagelijks 08:00 UTC | ETF flow data ophalen |
+| `hourly-whale-tracker.yml` | Elke 2 uur | Grote transacties detecteren |
+| `daily-onchain-metrics.yml` | Dagelijks 08:00 UTC | Glassnode metrics verzamelen |
+| `weekly-macro-report.yml` | Wekelijks maandag | Macro analyse (olie, rente, geopolitiek) |
 
-## 📁 Repo structuur
+## Installatie
 
-- `/whale_tracking` – Whale wallet analyses
-- `/etf_flows` – ETF inflow/outflow data
-- `/orderbooks` – Exchange orderbook diepte
-- `/liquidations` – Liquidatie statistieken
-- `/dashboards` – Visualisaties
-
-## 🏛️ Over mij
-
-Ik bouw kapitaal met de precisie van een architect. Geen hype. Geen FUD. Alleen data.
+1. Clone de repo:
+```bash
+git clone https://github.com/Pvr1978/alchemie-portal-analyses.git
+cd alchemie-portal-analyses
