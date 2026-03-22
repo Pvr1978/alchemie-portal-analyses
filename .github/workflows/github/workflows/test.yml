@@ -1,0 +1,8 @@
+import requests
+
+try:
+    url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
+    r = requests.get(url)
+    print(f"BTC: ${r.json()['bitcoin']['usd']}")
+except Exception as e:
+    print(f"Error: {e}")
