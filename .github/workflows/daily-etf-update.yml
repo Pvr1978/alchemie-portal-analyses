@@ -2,52 +2,52 @@ name: Daily ETF Flows Auto-Update
 
 on:
   schedule:
-    - cron: '0 10 * * *'      # elke dag 10:00 UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
   update-flows:
     runs-on: ubuntu-latest
     permissions:
-      contents: write          # nodig voor git push
+      contents: write  # voor git push
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: nodejs-scripts/package-lock.json
+          cache: 'npm'  # ← caching aan, maar GEEN cache-dependency-path meer
+          # cache-dependency-path: nodejs-scripts/package-lock.json  ← verwijderd of uitcomment
 
-      - name: Debug folder & files
+      - name: Debug folder structure
         run: |
           pwd
           ls -la .
-          echo "=== nodejs-scripts map ==="
+          echo "=== nodejs-scripts ==="
           ls -la nodejs-scripts || echo "Map nodejs-scripts ontbreekt!"
-          echo "=== fetch-etf-flows.js check ==="
-          ls -la nodejs-scripts/fetch-etf-flows.js || echo "fetch-etf-flows.js NIET GEVONDEN!"
           echo "=== package.json inhoud ==="
-          cat nodejs-scripts/package.json || echo "Geen package.json"
+          cat nodejs-scripts/package.json || echo "Geen package.json gevonden"
+          echo "=== package-lock.json check ==="
+          ls -la nodejs-scripts/package-lock.json || echo "package-lock.json NIET gevonden!"
 
       - name: Install dependencies
         working-directory: ./nodejs-scripts
         run: |
           npm ci || npm install --legacy-peer-deps --force
-          npm list --depth=0
+          npm list --depth=0 || echo "npm list faalt"
 
-      - name: Run ETF flows script
+      - name: Run ETF fetch script
         working-directory: ./nodejs-scripts
         run: |
           mkdir -p ../etf_flows
           node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
-          echo "=== Script output (laatste 30 regels) ==="
-          tail -n 30 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md
+          echo "=== Debug log inhoud (laatste 30 regels) ==="
+          tail -n 30 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Log file niet aangemaakt"
 
-      - name: Upload artifact (altijd beschikbaar)
+      - name: Upload artifact (ook bij falen)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -55,24 +55,10 @@ jobs:
           path: etf_flows/etf_flows_*.md
           retention-days: 14
 
-      - name: Commit & push (alleen als er wijzigingen zijn)
-        run: |
-          git config user.name "Alchemie Bot"
-          git config user.email "bot@github.com"
-          git add etf_flows/
-          git diff --staged --quiet || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
-          git push || echo "Geen push nodig of push mislukt"
-      - name: Run ETF fetch script
-        working-directory: ./nodejs-scripts
-        run: |
-          node fetch-etf-flows.js > ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
-          echo "=== Debug log inhoud ==="
-          cat ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md || echo "Log file niet aangemaakt"
-
       - name: Commit & push changes (alleen als er iets veranderd is)
         run: |
           git config user.name "Alchemie Bot"
           git config user.email "bot@github.com"
           git add etf_flows/
-          git diff --staged --quiet || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d')"
+          git diff --staged --quiet || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
           git push || echo "Geen push nodig of push mislukt"
