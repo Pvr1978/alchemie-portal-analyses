@@ -1,4 +1,4 @@
-name: Hourly Whale Tracker
+name: Hourly Whale Tracker - Debug
 
 on:
   workflow_dispatch:
@@ -7,9 +7,29 @@ jobs:
   track-whales:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - run: python src/whales/tracker.py
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Debug bestand & omgeving
+        run: |
+          pwd
+          ls -la src/whales || echo "Map src/whales ontbreekt!"
+          ls -la src/whales/tracker.py || echo "tracker.py NIET gevonden!"
+          echo "Python versie:"
+          python --version
+          echo "Pip lijst:"
+          pip list
+
+      - name: Run whale tracker met logging
+        run: |
+          python src/whales/tracker.py > whale_tracker_output.log 2>&1 || echo "Crashed met exit code $?"
+          echo "\n=== Volledige output / error log ==="
+          cat whale_tracker_output.log || echo "Geen log bestand"
