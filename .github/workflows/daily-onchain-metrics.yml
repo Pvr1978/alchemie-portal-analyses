@@ -1,4 +1,4 @@
-name: Daily On-Chain Metrics
+name: Daily On-Chain Metrics - Debug
 
 on:
   workflow_dispatch:
@@ -7,9 +7,39 @@ jobs:
   onchain:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - run: python src/onchain/metrics.py
+
+      - name: Install known dependencies
+        run: |
+          pip install requests pandas python-dotenv ccxt
+
+      - name: Debug file & folder structure
+        run: |
+          echo "Huidige werkdirectory:"
+          pwd
+          echo "\nLijst src/onchain:"
+          ls -la src/onchain || echo "Map src/onchain bestaat NIET!"
+          echo "\nCheck metrics.py:"
+          ls -la src/onchain/metrics.py || echo "metrics.py NIET gevonden!"
+          echo "\nPython versie & packages:"
+          python --version
+          pip list | grep -E "requests|pandas|ccxt|dotenv"
+
+      - name: Run metrics script with full logging
+        run: |
+          python src/onchain/metrics.py > metrics_output.log 2>&1 || echo "Script crashte met exit code $?"
+          echo "\n=== Volledige script output / error ==="
+          cat metrics_output.log || echo "Geen output bestand aangemaakt"
+
+      - name: Upload debug artifact (ook bij falen)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onchain-debug-logs
+          path: metrics_output.log
