@@ -1,4 +1,4 @@
-name: Hourly Whale Tracker
+name: Hourly Whale Tracker - Debug
 
 on:
   schedule:
@@ -11,16 +11,31 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
-      - name: Run whale tracker
+          pip install -r requirements.txt || echo "requirements.txt install faalde - check of file bestaat"
+
+      - name: Debug file & environment
         run: |
-          python src/whales/tracker.py
+          pwd
+          ls -la src/whales || echo "Map src/whales ontbreekt!"
+          ls -la src/whales/tracker.py || echo "tracker.py NIET gevonden!"
+          echo "Python versie:"
+          python --version
+          echo "Pip lijst:"
+          pip list
+
+      - name: Run script met logging
         env:
           GLASSNODE_API_KEY: ${{ secrets.GLASSNODE_API_KEY }}
           NANSEN_API_KEY: ${{ secrets.NANSEN_API_KEY }}
+        run: |
+          python src/whales/tracker.py > whale_tracker_log.txt 2>&1 || echo "Script faalde met exit code $?"
+          echo "\n=== Volledige log output / error ==="
+          cat whale_tracker_log.txt || echo "Geen log gemaakt"
