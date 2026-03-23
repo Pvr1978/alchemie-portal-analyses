@@ -1,4 +1,4 @@
-name: Test Data Fetch
+name: Test Data Fetch - Debug
 
 on:
   workflow_dispatch:
@@ -7,9 +7,38 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - run: python src/test.py
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Debug: check file existence & environment
+        run: |
+          echo "Huidige directory:"
+          pwd
+          echo "\nLijst src/ folder:"
+          ls -la src || echo "src map ontbreekt volledig!"
+          echo "\nLijst src/test.py:"
+          ls -la src/test.py || echo "src/test.py BESTAND NIET GEVONDEN!"
+          echo "\nPython & pip info:"
+          python --version
+          pip list | grep requests
+
+      - name: Run test script with full error capture
+        run: |
+          python src/test.py > test_output.log 2>&1 || echo "Script faalde met exit code $?"
+          echo "\n=== Volledige output + errors van test.py ==="
+          cat test_output.log || echo "Geen output log gemaakt (script crashte heel vroeg)"
+
+      - name: Upload debug logs (ook bij falen)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-debug-output
+          path: test_output.log
