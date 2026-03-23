@@ -1,7 +1,24 @@
-requests
-pandas
-numpy
-python-dotenv           # voor .env beheren, ook als je later keys toevoegt
-ccxt>=4.3.0             # superhandig voor alle public exchange data
-schedule                # voor lokale scheduling als je test
-pytz                    # tijdzones
+# Core HTTP & data handling
+requests>=2.32.3                # basis voor alle API calls
+pandas>=2.2.3                   # dataframes, CSV/Excel handling, analyse
+numpy>=2.0.0                    # numerieke berekeningen, arrays
+
+# Environment & secrets
+python-dotenv>=1.0.1            # .env files laden (API keys veilig houden)
+
+# Exchange data (public endpoints)
+ccxt>=4.3.0                     # unified API voor 100+ exchanges (orderbooks, tickers, OHLCV)
+
+# Scheduling & timing
+schedule>=1.2.2                 # eenvoudige lokale scheduler (voor testen zonder cron)
+pytz>=2024.2                    # tijdzones correct verwerken (UTC, exchange times)
+
+# Extra's die bijna altijd handig zijn in crypto pipelines
+tenacity>=9.0.0                 # retry met backoff voor flaky API calls (zeer aanbevolen!)
+python-dateutil>=2.9.0          # betere datum parsing & relatieve tijden
+tqdm>=4.66.5                    # mooie progress bars bij lange fetches/loops
+
+# Optioneel – als je visualisaties of logging wilt toevoegen
+matplotlib>=3.9.2               # eenvoudige charts (bijv. orderbook heatmaps)
+seaborn>=0.13.2                 # mooiere matplotlib plots
+loguru>=0.7.2                   # veel betere logging dan print()
