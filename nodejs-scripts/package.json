@@ -1,24 +1,63 @@
 {
   "name": "alchemie-portal-scripts",
   "version": "1.0.1",
-  "description": "Live crypto market data scripts for Alchemie Portal – orderbook snapshots (OKX/Bitvavo) + BTC/ETH/SOL ETF flows scraping",
+  "private": true,
+  "description": "Live crypto data pipelines & scrapers for Alchemie Portal: orderbook snapshots (OKX, Bitvavo, Coinbase), ETF flows (Farside), whale tracking, on-chain metrics. Daily/hourly automation via GitHub Actions.",
   "main": "fetch-orderbook.js",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pvr1978/alchemie-portal-analyses.git"
+  },
+  "homepage": "https://github.com/Pvr1978/alchemie-portal-analyses#readme",
+  "bugs": {
+    "url": "https://github.com/Pvr1978/alchemie-portal-analyses/issues"
+  },
+  "keywords": [
+    "crypto",
+    "blockchain",
+    "on-chain",
+    "etf-flows",
+    "orderbook",
+    "whale-tracking",
+    "scraper",
+    "github-actions",
+    "bitcoin",
+    "ethereum",
+    "solana"
+  ],
+  "author": {
+    "name": "Alchemie Portal",
+    "url": "https://x.com/AlchemiePortal"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "volta": {
+    "node": "20.18.0",
+    "npm": "10.8.3"
+  },
   "scripts": {
-    "orderbook": "node fetch-orderbook.js",
-    "etf": "node fetch-etf-flows.js",
     "start": "npm run etf && npm run orderbook",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "orderbook": "node nodejs-scripts/fetch-orderbook.js",
+    "etf": "node nodejs-scripts/fetch-etf-flows.js",
+    "watch:orderbook": "nodemon nodejs-scripts/fetch-orderbook.js",
+    "watch:etf": "nodemon nodejs-scripts/fetch-etf-flows.js",
+    "lint": "eslint nodejs-scripts/**/*.js --ext .js",
+    "format": "prettier --write nodejs-scripts/**/*.js",
+    "test": "echo \"No tests yet – add Jest/Mocha later\" && exit 0",
+    "build": "echo \"No build step needed yet (pure scripts)\"",
+    "postinstall": "echo \"Dependencies installed – ready to run npm start\""
   },
   "dependencies": {
     "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
-  },
-  "author": "Alchemie Portal",
-  "license": "MIT",
-  "engines": {
-    "node": ">=20.0.0"
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.3.3"
   }
 }
