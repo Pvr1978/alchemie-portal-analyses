@@ -8,40 +8,44 @@ on:
 jobs:
   update-flows:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Force Node 24 om deprecation te omzeilen
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 24
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'  # Gebruik Node 24 direct
+          node-version: '20'              # ← tijdelijk terug naar 20 (stabieler dan 24 voor veel libs)
+          cache: 'npm'
+          cache-dependency-path: nodejs-scripts/package-lock.json
 
-      - name: Debug directory & files
+      - name: Debug folder structure
         run: |
-          ls -la
-          ls -la nodejs-scripts || echo "nodejs-scripts map ontbreekt!"
-          ls -la etf_flows || echo "etf_flows map ontbreekt!"
-          ls -la nodejs-scripts/package.json || echo "package.json niet gevonden!"
+          pwd
+          ls -la .
+          echo "=== nodejs-scripts ==="
+          ls -la nodejs-scripts || echo "Map nodejs-scripts ontbreekt!"
+          echo "=== package.json inhoud ==="
+          cat nodejs-scripts/package.json || echo "Geen package.json gevonden"
 
       - name: Install dependencies
+        working-directory: ./nodejs-scripts
         run: |
-          cd nodejs-scripts || { echo "Fout: cd nodejs-scripts mislukt"; exit 1; }
-          npm install axios cheerio --save --legacy-peer-deps --force || npm install --force
-          npm list || echo "npm list faalt"
+          npm ci || npm install --legacy-peer-deps --force
+          npm list --depth=0 || echo "npm list faalt"
 
-      - name: Run ETF script
+      - name: Run ETF fetch script
+        working-directory: ./nodejs-scripts
         run: |
-          cd nodejs-scripts
-          node fetch-etf-flows.js > ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md 2>&1
-          cat ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md
+          node fetch-etf-flows.js > ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
+          echo "=== Debug log inhoud ==="
+          cat ../etf_flows/etf_debug_log_$(date +%Y-%m-%d).md || echo "Log file niet aangemaakt"
 
-      - name: Commit changes
+      - name: Commit & push changes (alleen als er iets veranderd is)
         run: |
           git config user.name "Alchemie Bot"
           git config user.email "bot@github.com"
           git add etf_flows/
-          git commit -m "Auto: ETF flows debug update $(date +'%Y-%m-%d')" || echo "Geen changes"
-          git push || echo "Geen push nodig"
+          git diff --staged --quiet || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d')"
+          git push || echo "Geen push nodig of push mislukt"
