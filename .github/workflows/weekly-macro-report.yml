@@ -1,4 +1,4 @@
-name: Weekly Macro Report
+name: Weekly Macro Report - Debug Mode
 
 on:
   workflow_dispatch:
@@ -7,9 +7,40 @@ jobs:
   macro:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - run: python src/macro/report.py
+
+      - name: Install minimal dependencies
+        run: pip install requests
+
+      - name: Debug: check folders & files
+        run: |
+          echo "Huidige werkdirectory:"
+          pwd
+          echo "\n=== src/ inhoud ==="
+          ls -la src || echo "src map bestaat NIET!"
+          echo "\n=== macro map inhoud ==="
+          ls -la src/macro || echo "src/macro map ontbreekt!"
+          echo "\n=== report.py check ==="
+          ls -la src/macro/report.py || echo "src/macro/report.py BESTAND NIET GEVONDEN!"
+          echo "\nPython & pip info:"
+          python --version
+          pip list | grep requests
+
+      - name: Run macro report with full logging
+        run: |
+          python src/macro/report.py > macro_report_output.log 2>&1 || echo "Script crashte met exit code $?"
+          echo "\n=== Volledige output + errors ==="
+          cat macro_report_output.log || echo "Geen log bestand aangemaakt"
+
+      - name: Upload debug logs (ook bij falen)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: macro-debug-logs
+          path: macro_report_output.log
