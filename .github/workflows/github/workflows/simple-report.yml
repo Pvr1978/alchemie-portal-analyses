@@ -1,4 +1,4 @@
-name: Simple Daily Report
+name: Simple Daily Report - Debug
 
 on:
   workflow_dispatch:
@@ -7,9 +7,38 @@ jobs:
   report:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - run: python src/simple_report.py
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Debug: bestaat het script?
+        run: |
+          echo "Huidige directory:"
+          pwd
+          echo "\nsrc folder inhoud:"
+          ls -la src || echo "src map ontbreekt volledig!"
+          echo "\nsimple_report.py check:"
+          ls -la src/simple_report.py || echo "FILE src/simple_report.py BESTAAT NIET!"
+          echo "\nAlle .py files in src:"
+          find src -name "*.py" || echo "Geen .py files gevonden"
+
+      - name: Run script met logging
+        run: |
+          echo "Probeer te draaien..."
+          python src/simple_report.py > simple_report_log.txt 2>&1 || echo "Crashte met exit code $?"
+          echo "\n=== Log output / error ==="
+          cat simple_report_log.txt || echo "Geen log bestand"
+
+      - name: Upload log (ook bij falen)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple-report-debug-log
+          path: simple_report_log.txt
