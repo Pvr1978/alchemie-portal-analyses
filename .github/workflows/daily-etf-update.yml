@@ -9,7 +9,7 @@ jobs:
   update-flows:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # voor git push
+      contents: write  # nodig voor git commit/push
 
     steps:
       - name: Checkout repo
@@ -19,33 +19,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'  # ← caching aan, maar GEEN cache-dependency-path meer
-          # cache-dependency-path: nodejs-scripts/package-lock.json  ← verwijderd of uitcomment
+          cache: 'npm'  # caching aan, maar GEEN cache-dependency-path meer
 
-      - name: Debug folder structure
+      - name: Debug folder & lockfile
         run: |
           pwd
           ls -la .
           echo "=== nodejs-scripts ==="
           ls -la nodejs-scripts || echo "Map nodejs-scripts ontbreekt!"
-          echo "=== package.json inhoud ==="
-          cat nodejs-scripts/package.json || echo "Geen package.json gevonden"
+          echo "=== package.json ==="
+          cat nodejs-scripts/package.json || echo "Geen package.json"
           echo "=== package-lock.json check ==="
-          ls -la nodejs-scripts/package-lock.json || echo "package-lock.json NIET gevonden!"
+          ls -la nodejs-scripts/package-lock.json || echo "package-lock.json NIET gevonden in subfolder!"
 
       - name: Install dependencies
         working-directory: ./nodejs-scripts
         run: |
           npm ci || npm install --legacy-peer-deps --force
-          npm list --depth=0 || echo "npm list faalt"
+          npm list --depth=0
 
       - name: Run ETF fetch script
         working-directory: ./nodejs-scripts
         run: |
           mkdir -p ../etf_flows
           node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
-          echo "=== Debug log inhoud (laatste 30 regels) ==="
-          tail -n 30 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Log file niet aangemaakt"
+          echo "=== Debug log (laatste 30 regels) ==="
+          tail -n 30 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Log niet aangemaakt"
 
       - name: Upload artifact (ook bij falen)
         if: always()
@@ -55,7 +54,7 @@ jobs:
           path: etf_flows/etf_flows_*.md
           retention-days: 14
 
-      - name: Commit & push changes (alleen als er iets veranderd is)
+      - name: Commit & push (alleen bij wijzigingen)
         run: |
           git config user.name "Alchemie Bot"
           git config user.email "bot@github.com"
