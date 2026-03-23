@@ -9,7 +9,7 @@ jobs:
   update-flows:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # nodig voor git commit/push
+      contents: write
 
     steps:
       - name: Checkout repo
@@ -19,18 +19,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'  # caching aan, maar GEEN cache-dependency-path meer
+          cache: 'npm'  # caching blijft aan, maar zonder specifieke path
 
-      - name: Debug folder & lockfile
+      - name: Debug folder & files
         run: |
           pwd
           ls -la .
-          echo "=== nodejs-scripts ==="
-          ls -la nodejs-scripts || echo "Map nodejs-scripts ontbreekt!"
-          echo "=== package.json ==="
-          cat nodejs-scripts/package.json || echo "Geen package.json"
-          echo "=== package-lock.json check ==="
-          ls -la nodejs-scripts/package-lock.json || echo "package-lock.json NIET gevonden in subfolder!"
+          ls -la nodejs-scripts || echo "nodejs-scripts map ontbreekt!"
+          ls -la nodejs-scripts/package.json || echo "Geen package.json"
+          ls -la nodejs-scripts/package-lock.json || echo "Geen package-lock.json gevonden!"
 
       - name: Install dependencies
         working-directory: ./nodejs-scripts
@@ -54,7 +51,7 @@ jobs:
           path: etf_flows/etf_flows_*.md
           retention-days: 14
 
-      - name: Commit & push (alleen bij wijzigingen)
+      - name: Commit & push changes
         run: |
           git config user.name "Alchemie Bot"
           git config user.email "bot@github.com"
