@@ -2,64 +2,62 @@ name: Daily ETF Flows Auto-Update
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # elke dag om 10:00 UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
   update-flows:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # nodig voor git commit/push
+      contents: write
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'  # upgrade naar 22 om deprecation warnings te fixen
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: nodejs-scripts/package-lock.json  # cruciale fix voor lockfile in submap!
+          cache-dependency-path: nodejs-scripts/package-lock.json
 
-      - name: Debug folder structure & files
+      - name: Debug files
         run: |
-          pwd
-          ls -la .
-          echo "=== nodejs-scripts inhoud ==="
-          ls -la nodejs-scripts || echo "Map nodejs-scripts ontbreekt!"
-          echo "=== package.json inhoud ==="
-          cat nodejs-scripts/package.json || echo "Geen package.json gevonden"
-          echo "=== package-lock.json check ==="
-          ls -la nodejs-scripts/package-lock.json || echo "Geen package-lock.json gevonden"
+          ls -la nodejs-scripts/
+          cat nodejs-scripts/package.json || echo "Geen package.json"
+          ls nodejs-scripts/package-lock.json && echo "Lock aanwezig" || echo "Geen lockfile"
 
-      - name: Install dependencies
+      - name: Install dependencies (clean & force)
         working-directory: ./nodejs-scripts
         run: |
-          npm ci || npm install --legacy-peer-deps --force
-          npm list --depth=0 || echo "npm list faalt (maar doorgaan)"
+          npm cache clean --force || true
+          rm -rf node_modules package-lock.json || true
+          npm install --legacy-peer-deps --force
+          npm list --depth=0 || echo "List faalt maar doorgaan"
 
-      - name: Run ETF fetch script
+      - name: Run script
         working-directory: ./nodejs-scripts
         run: |
           mkdir -p ../etf_flows
-          node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
-          echo "=== Script output (laatste 40 regels voor betere debug) ==="
-          tail -n 40 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Geen output file aangemaakt"
+          echo "Start script..."
+          node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1
+          code=$?
+          echo "Exit code: $code"
+          echo "=== Laatste 50 regels ==="
+          tail -n 50 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Geen file"
 
-      - name: Upload artifact (ook als er geen files zijn)
+      - name: Upload artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: etf-flows-report
-          path: etf_flows/etf_flows_*.md
+          name: etf-report
+          path: etf_flows/*.md
           if-no-files-found: warn
-          retention-days: 14
 
-      - name: Commit & push changes (alleen als er wijzigingen zijn)
+      - name: Commit changes
         run: |
-          git config user.name "Alchemie Bot"
+          git config user.name "Bot"
           git config user.email "bot@github.com"
           git add etf_flows/
-          git diff --staged --quiet && echo "Geen wijzigingen, skip commit" || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
-          git push || echo "Push niet nodig of mislukt"
+          git diff --staged --quiet && echo "Geen wijzigingen" || git commit -m "ETF update $(date +'%Y-%m-%d')"
+          git push || echo "Geen push"
