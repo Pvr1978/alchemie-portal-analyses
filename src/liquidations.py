@@ -6,7 +6,6 @@ Gebaseerd op de stijl van fomc_liquidations_march20_2026.md.
 """
 
 import os
-import json
 import requests
 from datetime import datetime
 
@@ -33,13 +32,10 @@ def fetch_liquidations():
         data = resp.json()
         # De API kan verschillende velden hebben. Dit is een veilige parsing.
         if "data" in data:
-            # Meestal: data["longSum"] en data["shortSum"] zijn de totalen over alle exchanges.
             total_longs = float(data["data"].get("longSum", 0))
             total_shorts = float(data["data"].get("shortSum", 0))
-            # Optioneel: exchange breakdown staat soms in data["exchangeList"]
             exchange_data = data["data"].get("exchangeList", [])
         else:
-            # Alternatieve structuur (valt terug op 0)
             total_longs = 0.0
             total_shorts = 0.0
             exchange_data = []
