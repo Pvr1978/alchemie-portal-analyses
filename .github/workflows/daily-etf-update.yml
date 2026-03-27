@@ -2,17 +2,20 @@ name: Daily ETF Flows Auto-Update
 
 on:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '0 10 * * *'  # elke dag 10:00 UTC
   workflow_dispatch:
 
 jobs:
   update-flows:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # force Node 24 om warning weg te krijgen
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -21,20 +24,48 @@ jobs:
           cache: 'npm'
           cache-dependency-path: nodejs-scripts/package-lock.json
 
-      - name: Debug files
+      - name: Debug folder & files
         run: |
-          ls -la nodejs-scripts/
+          pwd
+          ls -la nodejs-scripts/ || echo "nodejs-scripts map ontbreekt"
           cat nodejs-scripts/package.json || echo "Geen package.json"
-          ls nodejs-scripts/package-lock.json && echo "Lock aanwezig" || echo "Geen lockfile"
+          ls nodejs-scripts/package-lock.json && echo "Lockfile aanwezig" || echo "Geen lockfile"
 
-      - name: Install dependencies (clean & force)
+      - name: Install dependencies (clean & force fallback)
         working-directory: ./nodejs-scripts
         run: |
           npm cache clean --force || true
           rm -rf node_modules package-lock.json || true
           npm install --legacy-peer-deps --force
-          npm list --depth=0 || echo "List faalt maar doorgaan"
+          npm list --depth=0 || echo "npm list faalt maar doorgaan"
 
+      - name: Run ETF fetch script
+        working-directory: ./nodejs-scripts
+        run: |
+          mkdir -p ../etf_flows
+          echo "Script start: $(date)"
+          node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1
+          EXIT_CODE=$?
+          echo "Exit code: $EXIT_CODE"
+          echo "=== Laatste 50 regels output / error ==="
+          tail -n 50 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Geen output file gemaakt"
+
+      - name: Upload artifact (ook bij falen)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: etf-flows-report
+          path: etf_flows/etf_flows_*.md
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Commit & push (alleen bij wijzigingen)
+        run: |
+          git config user.name "Alchemie Bot"
+          git config user.email "bot@github.com"
+          git add etf_flows/
+          git diff --staged --quiet && echo "Geen wijzigingen" || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
+          git push || echo "Geen push nodig of mislukt"
       - name: Run script
         working-directory: ./nodejs-scripts
         run: |
