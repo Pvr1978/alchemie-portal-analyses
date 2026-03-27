@@ -1,0 +1,36 @@
+name: Daily Liquidations Report
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # elke dag om 9:00 UTC (aanpasbaar)
+  workflow_dispatch:       # handmatig triggerbaar
+
+jobs:
+  liquidations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas python-dotenv  # voeg evt. andere toe
+
+      - name: Run liquidations script
+        run: |
+          python src/liquidations/liquidations.py
+
+      - name: Commit and push if changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add liquidations/
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update liquidations report $(date +'%Y-%m-%d')"
+          git push
