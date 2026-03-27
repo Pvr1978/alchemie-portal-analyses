@@ -14,10 +14,12 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'  # caching voor pip packages (versnelt herhaalde runs)
 
-      - name: Install known dependencies
+      - name: Install dependencies
         run: |
-          pip install requests pandas python-dotenv ccxt
+          python -m pip install --upgrade pip
+          pip install --no-cache-dir requests pandas python-dotenv ccxt
 
       - name: Debug file & folder structure
         run: |
@@ -29,13 +31,18 @@ jobs:
           ls -la src/onchain/metrics.py || echo "metrics.py NIET gevonden!"
           echo "\nPython versie & packages:"
           python --version
-          pip list | grep -E "requests|pandas|ccxt|dotenv"
+          pip list | grep -E "requests|pandas|ccxt|dotenv|python-dotenv"
 
       - name: Run metrics script with full logging
         run: |
-          python src/onchain/metrics.py > metrics_output.log 2>&1 || echo "Script crashte met exit code $?"
-          echo "\n=== Volledige script output / error ==="
-          cat metrics_output.log || echo "Geen output bestand aangemaakt"
+          python src/onchain/metrics.py > metrics_output.log 2>&1
+          EXIT_CODE=$?
+          echo "Script exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "Script faalde!"
+          fi
+          echo "\n=== Volledige output / errors ==="
+          cat metrics_output.log || echo "Geen metrics_output.log aangemaakt"
 
       - name: Upload debug artifact (ook bij falen)
         if: always()
@@ -43,3 +50,4 @@ jobs:
         with:
           name: onchain-debug-logs
           path: metrics_output.log
+          if-no-files-found: warn
