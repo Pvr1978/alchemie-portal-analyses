@@ -8,8 +8,6 @@ on:
 jobs:
   update-flows:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # lost Node 20 deprecation warning op
     permissions:
       contents: write  # nodig voor git commit/push
 
@@ -20,8 +18,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'  # caching aan, geen specifieke path meer (lost lockfile error op)
+          node-version: '22'  # upgrade naar 22 om deprecation warnings te fixen
+          cache: 'npm'
+          cache-dependency-path: nodejs-scripts/package-lock.json  # cruciale fix voor lockfile in submap!
 
       - name: Debug folder structure & files
         run: |
@@ -38,15 +37,15 @@ jobs:
         working-directory: ./nodejs-scripts
         run: |
           npm ci || npm install --legacy-peer-deps --force
-          npm list --depth=0 || echo "npm list faalt"
+          npm list --depth=0 || echo "npm list faalt (maar doorgaan)"
 
       - name: Run ETF fetch script
         working-directory: ./nodejs-scripts
         run: |
           mkdir -p ../etf_flows
           node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
-          echo "=== Script output (laatste 30 regels) ==="
-          tail -n 30 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Geen log file aangemaakt"
+          echo "=== Script output (laatste 40 regels voor betere debug) ==="
+          tail -n 40 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Geen output file aangemaakt"
 
       - name: Upload artifact (ook als er geen files zijn)
         if: always()
@@ -54,7 +53,7 @@ jobs:
         with:
           name: etf-flows-report
           path: etf_flows/etf_flows_*.md
-          if-no-files-found: warn  # waarschuw alleen, faal niet
+          if-no-files-found: warn
           retention-days: 14
 
       - name: Commit & push changes (alleen als er wijzigingen zijn)
@@ -62,28 +61,5 @@ jobs:
           git config user.name "Alchemie Bot"
           git config user.email "bot@github.com"
           git add etf_flows/
-          git diff --staged --quiet || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
-          git push || echo "Geen push nodig of push mislukt"
-      - name: Run ETF fetch script
-        working-directory: ./nodejs-scripts
-        run: |
-          mkdir -p ../etf_flows
-          node fetch-etf-flows.js > ../etf_flows/etf_flows_$(date +%Y-%m-%d).md 2>&1 || echo "Script exited with code $?"
-          echo "=== Debug log (laatste 30 regels) ==="
-          tail -n 30 ../etf_flows/etf_flows_$(date +%Y-%m-%d).md || echo "Log niet aangemaakt"
-
-      - name: Upload artifact (ook bij falen)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: etf-flows-report
-          path: etf_flows/etf_flows_*.md
-          retention-days: 14
-
-      - name: Commit & push changes
-        run: |
-          git config user.name "Alchemie Bot"
-          git config user.email "bot@github.com"
-          git add etf_flows/
-          git diff --staged --quiet || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
-          git push || echo "Geen push nodig of push mislukt"
+          git diff --staged --quiet && echo "Geen wijzigingen, skip commit" || git commit -m "Auto: ETF flows update $(date +'%Y-%m-%d %H:%M UTC')"
+          git push || echo "Push niet nodig of mislukt"
